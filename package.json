@@ -1,0 +1,62 @@
+{
+  "name": "cryptikr-ticker",
+  "version": "1.0.0",
+  "description": "Cryptikr Desktop Ticker \u2014 AI-powered crypto analysis",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build-mac": "electron-builder --mac --x64",
+    "build-mac-arm": "electron-builder --mac --arm64"
+  },
+  "dependencies": {
+    "electron-store": "^8.1.0"
+  },
+  "devDependencies": {
+    "electron": "^35.0.0",
+    "electron-builder": "^24.0.0"
+  },
+  "build": {
+    "appId": "com.cryptikr.ticker",
+    "productName": "Cryptikr Ticker",
+    "copyright": "Copyright \u00a9 2025 Cryptikr",
+    "mac": {
+      "category": "public.app-category.finance",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.icns",
+      "identity": null,
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false
+    },
+    "dmg": {
+      "title": "Cryptikr Ticker",
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
+    "files": [
+      "main.js",
+      "ticker.html",
+      "preload.js",
+      "settings.html",
+      "preload-settings.js",
+      "assets/**"
+    ],
+    "asar": true
+  }
+}
