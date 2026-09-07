@@ -78,8 +78,9 @@ html, body {
   cursor: pointer; transition: background .15s; flex-shrink: 0;
 }
 .ticker-item:hover { background: #111827; }
+.ticker-mkt { font-size: 9px; font-weight: 700; padding: 1px 4px; border-radius: 3px; background: rgba(99,102,241,.2); color: #818CF8; margin-right: 2px; letter-spacing: .04em; }
 .ticker-sym { font-size: 12px; font-weight: 700; color: #FFFFFF; letter-spacing: .02em; }
-.ticker-price { font-size: 12px; color: #CBD5E1; font-weight: 600; }
+.ticker-price { font-size: 12px; color: #F0F4FF; font-weight: 700; }
 .ticker-chg { font-size: 11px; font-weight: 700; }
 .up { color: #10B981; } .dn { color: #EF4444; }
 /* AD ZONE */
@@ -228,26 +229,46 @@ function fmtPrice(p) {
   return '$' + p.toFixed(4);
 }
 
+var marketQuotes = [];
+
 function buildTicker() {
   var tape = document.getElementById('ticker-tape');
   if (!prices.length) { tape.innerHTML = '<div class="loading">No data</div>'; return; }
-  function makeItems() {
+  function makeCryptoItems() {
     return prices.map(function(c) {
       var up = (c.price_change_percentage_24h || 0) >= 0;
       var pct = (c.price_change_percentage_24h || 0).toFixed(2);
-      return '<div class="ticker-item" data-id="' + c.id + '">'
+      return '<div class="ticker-item crypto-item" data-id="' + c.id + '">'
         + '<span class="ticker-sym">' + (c.symbol||'').toUpperCase() + '</span>'
         + '<span class="ticker-price">' + fmtPrice(c.current_price) + '</span>'
         + '<span class="ticker-chg ' + (up?'up':'dn') + '">' + (up?'+':'') + pct + '%</span>'
         + '</div>';
     }).join('');
   }
-  var html = makeItems() + makeItems();
-  tape.innerHTML = html;
+  function makeMktItems() {
+    return marketQuotes.map(function(q) {
+      var up = (q.dp || 0) >= 0;
+      var pct = q.dp ? (up?'+':'') + parseFloat(q.dp).toFixed(2) + '%' : '--';
+      var price = q.c ? '$' + parseFloat(q.c).toFixed(2) : '--';
+      return '<div class="ticker-item" data-url="https://pulsestock-nu.vercel.app">'
+        + '<span class="ticker-mkt">MKT</span>'
+        + '<span class="ticker-sym">' + q.sym + '</span>'
+        + '<span class="ticker-price">' + price + '</span>'
+        + '<span class="ticker-chg ' + (up?'up':'dn') + '">' + pct + '</span>'
+        + '</div>';
+    }).join('');
+  }
+  var items = makeCryptoItems() + makeMktItems();
+  tape.innerHTML = items + items;
   tape.style.animationDuration = speed + 's';
-  tape.querySelectorAll('.ticker-item').forEach(function(el) {
+  tape.querySelectorAll('.crypto-item').forEach(function(el) {
     el.addEventListener('click', function() {
       if (window.api) window.api.openCryptikr(el.getAttribute('data-id'));
+    });
+  });
+  tape.querySelectorAll('[data-url]').forEach(function(el) {
+    el.addEventListener('click', function() {
+      if (window.api) window.api.openExternal(el.getAttribute('data-url'));
     });
   });
 }
@@ -255,8 +276,12 @@ function buildTicker() {
 async function loadPrices() {
   try {
     var data = await window.api.fetchPrices();
-    if (data && data.length) { prices = data; buildTicker(); }
-  } catch(e) {}
+    if (data && data.length) { prices = data; }
+    // Fetch market indexes
+    var mData = await window.api.fetchMarketQuotes();
+    if (mData && mData.length) { marketQuotes = mData; }
+    buildTicker();
+  } catch(e) { console.error(e); }
 }
 
 function doSearch() {
