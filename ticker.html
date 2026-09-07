@@ -230,18 +230,36 @@ function fmtPrice(p) {
 }
 
 var marketQuotes = [];
+var settingsCoins = [];
+
+// Map of coin id -> symbol for display when API doesn't return it
+var COIN_SYMS = {
+  'bitcoin':'BTC','ethereum':'ETH','solana':'SOL','ripple':'XRP','dogecoin':'DOGE',
+  'cardano':'ADA','avalanche-2':'AVAX','polkadot':'DOT','chainlink':'LINK',
+  'near':'NEAR','aptos':'APT','arbitrum':'ARB','cosmos':'ATOM','uniswap':'UNI',
+  'shiba-inu':'SHIB','the-open-network':'TON','sui':'SUI','pepe':'PEPE',
+  'bitcoin-cash':'BCH','litecoin':'LTC','tron':'TRX','matic-network':'MATIC',
+};
 
 function buildTicker() {
   var tape = document.getElementById('ticker-tape');
-  if (!prices.length) { tape.innerHTML = '<div class="loading">No data</div>'; return; }
+  // Build price lookup from API results
+  var priceMap = {};
+  prices.forEach(function(c) { priceMap[c.id] = c; });
+
+  // Always render ALL coins from settings, price shown if available
   function makeCryptoItems() {
-    return prices.map(function(c) {
-      var up = (c.price_change_percentage_24h || 0) >= 0;
-      var pct = (c.price_change_percentage_24h || 0).toFixed(2);
-      return '<div class="ticker-item crypto-item" data-id="' + c.id + '">'
-        + '<span class="ticker-sym">' + (c.symbol||'').toUpperCase() + '</span>'
-        + '<span class="ticker-price">' + fmtPrice(c.current_price) + '</span>'
-        + '<span class="ticker-chg ' + (up?'up':'dn') + '">' + (up?'+':'') + pct + '%</span>'
+    return settingsCoins.map(function(id) {
+      var c = priceMap[id];
+      var sym = c ? (c.symbol||id).toUpperCase() : (COIN_SYMS[id] || id.split('-')[0].toUpperCase().slice(0,6));
+      var price = c ? fmtPrice(c.current_price) : '--';
+      var pct = c ? (c.price_change_percentage_24h||0).toFixed(2) : null;
+      var up = pct ? parseFloat(pct) >= 0 : true;
+      var chgStr = pct ? (up?'+':'') + pct + '%' : '';
+      return '<div class="ticker-item crypto-item" data-id="' + id + '">'
+        + '<span class="ticker-sym">' + sym + '</span>'
+        + '<span class="ticker-price">' + price + '</span>'
+        + (chgStr ? '<span class="ticker-chg ' + (up?'up':'dn') + '">' + chgStr + '</span>' : '')
         + '</div>';
     }).join('');
   }
@@ -311,6 +329,7 @@ function speedToDuration(s) {
 async function init() {
   var settings = {};
   try { settings = await window.api.getSettings(); } catch(e) {}
+  settingsCoins = (settings && settings.coins) ? settings.coins : [];
   speed = speedToDuration(settings.speed);
   buildAdZone();
   setInterval(rotateAd, 6000);
