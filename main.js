@@ -6,7 +6,6 @@ app.setName('Cryptikr Ticker');
 const TICKER_HEIGHT = 44;
 const CG_KEY = 'CG-pwDvU5d2bQqDKVha9KGCkaCf';
 
-// electron-store
 let Store, store;
 try {
   Store = require('electron-store');
@@ -14,15 +13,11 @@ try {
     defaults: {
       coins: ['bitcoin','ethereum','solana','ripple','dogecoin','cardano','avalanche-2','chainlink','near','arbitrum'],
       speed: 50,
-      theme: 'dark',
     }
   });
-} catch(e) {
-  console.warn('electron-store not available:', e.message);
-  store = null;
-}
+} catch(e) { store = null; }
 
-function getSettings()       { return store ? store.store : { coins: ['bitcoin','ethereum','solana','ripple','dogecoin','cardano'] }; }
+function getSettings()       { return store ? store.store : { coins: ['bitcoin','ethereum','solana','ripple','dogecoin'], speed: 50 }; }
 function saveSettings(s)     { if (store) Object.assign(store.store, s); return getSettings(); }
 function getStored(key)      { return store ? store.get(key) : null; }
 function setStored(key, val) { if (store) store.set(key, val); }
@@ -32,12 +27,14 @@ let settingsWindow = null;
 let tray = null;
 let isHidden = false;
 
-// Tray icon
 function createTrayIcon() {
   const size = process.platform === 'darwin' ? 16 : 32;
-  return nativeImage.createFromDataURL(
-    `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAAdgAAAHYBTnsmCAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAFASURBVDiNpdMxS8NAGAbgJ0kHwUEnB0FwcXFwcXFwcBIEQXAQBEFwcBIEB0EQBAf/gIODg4ODIAiCg4ODg4ODg4MgCIIgCIIg+A+SOAiCIAiC+A+SOAiCIAiC+A+SOA==`
-  ).resize({ width: size, height: size });
+  // Simple amber square icon
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 16 16">
+    <rect width="16" height="16" rx="4" fill="#F59E0B"/>
+    <text x="8" y="12" text-anchor="middle" font-size="11" font-weight="bold" fill="#000">₿</text>
+  </svg>`;
+  return nativeImage.createFromDataURL('data:image/svg+xml;base64,' + Buffer.from(svg).toString('base64'));
 }
 
 function createTickerWindow() {
@@ -48,7 +45,10 @@ function createTickerWindow() {
     frame: false, transparent: true, alwaysOnTop: true,
     resizable: false, movable: false, minimizable: false, maximizable: false,
     skipTaskbar: true, hasShadow: false,
-    webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false }
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true, nodeIntegration: false
+    }
   });
   tickerWindow.loadFile('ticker.html');
   if (process.platform === 'darwin') {
@@ -61,16 +61,23 @@ function createTickerWindow() {
 function createSettingsWindow() {
   if (settingsWindow) { settingsWindow.focus(); return; }
   settingsWindow = new BrowserWindow({
-    width: 480, height: 560,
-    title: 'Cryptikr Ticker Settings',
-    resizable: false,
-    webPreferences: { preload: path.join(__dirname, 'preload-settings.js'), contextIsolation: true, nodeIntegration: false }
+    width: 480, height: 600,
+    title: 'Cryptikr Ticker — Settings',
+    resizable: false, minimizable: false,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload-settings.js'),
+      contextIsolation: true, nodeIntegration: false
+    }
   });
   settingsWindow.loadFile('settings.html');
-  settingsWindow.on('closed', () => { settingsWindow = null; });
+  settingsWindow.on('closed', () => {
+    settingsWindow = null;
+    // Reload ticker after settings saved
+    if (tickerWindow) tickerWindow.webContents.reload();
+  });
 }
 
-function createTray() {
+function buildTray() {
   tray = new Tray(createTrayIcon());
   tray.setToolTip('Cryptikr Ticker');
   const menu = Menu.buildFromTemplate([
@@ -78,35 +85,38 @@ function createTray() {
     { type: 'separator' },
     { label: 'Settings', click: () => createSettingsWindow() },
     { label: 'Open Cryptikr', click: () => shell.openExternal('https://cryptikr.vercel.app') },
+    { type: 'separator' },
     { label: isHidden ? 'Show Ticker' : 'Hide Ticker', click: () => {
         isHidden = !isHidden;
         if (tickerWindow) isHidden ? tickerWindow.hide() : tickerWindow.show();
-        createTray();
+        buildTray();
       }
     },
     { type: 'separator' },
-    { label: 'Quit', click: () => app.quit() }
+    { label: 'Quit Cryptikr Ticker', click: () => app.quit() }
   ]);
   tray.setContextMenu(menu);
 }
 
 app.whenReady().then(() => {
   createTickerWindow();
-  createTray();
+  buildTray();
 });
 
 app.on('window-all-closed', (e) => e.preventDefault());
 
-// IPC
-ipcMain.handle('get-settings', () => getSettings());
-ipcMain.handle('save-settings', (_, s) => saveSettings(s));
-ipcMain.handle('get-stored', (_, k) => getStored(k));
-ipcMain.handle('set-stored', (_, k, v) => setStored(k, v));
-ipcMain.handle('open-settings', () => createSettingsWindow());
-ipcMain.handle('open-cryptikr', (_, coinId) => {
+// IPC handlers
+ipcMain.handle('get-settings',   () => getSettings());
+ipcMain.handle('save-settings',  (_, s) => { saveSettings(s); return true; });
+ipcMain.handle('get-stored',     (_, k) => getStored(k));
+ipcMain.handle('set-stored',     (_, k, v) => setStored(k, v));
+ipcMain.handle('open-settings',  () => createSettingsWindow());
+ipcMain.handle('open-cryptikr',  (_, coinId) => {
   shell.openExternal('https://cryptikr.vercel.app' + (coinId ? '/crypto/' + coinId : ''));
 });
-ipcMain.handle('fetch-prices', async () => {
+ipcMain.handle('open-external',  (_, url) => shell.openExternal(url));
+ipcMain.handle('quit',           () => app.quit());
+ipcMain.handle('fetch-prices',   async () => {
   try {
     const settings = getSettings();
     const ids = (settings.coins || []).join(',');
