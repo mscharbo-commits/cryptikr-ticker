@@ -107,7 +107,11 @@ app.on('window-all-closed', (e) => e.preventDefault());
 
 // IPC handlers
 ipcMain.handle('get-settings',   () => getSettings());
-ipcMain.handle('save-settings',  (_, s) => { saveSettings(s); return true; });
+ipcMain.handle('save-settings',  (_, s) => {
+  saveSettings(s);
+  if (tickerWindow) tickerWindow.webContents.reload();
+  return true;
+});
 ipcMain.handle('get-stored',     (_, k) => getStored(k));
 ipcMain.handle('set-stored',     (_, k, v) => setStored(k, v));
 ipcMain.handle('open-settings',  () => createSettingsWindow());
@@ -116,6 +120,19 @@ ipcMain.handle('open-cryptikr',  (_, coinId) => {
 });
 ipcMain.handle('open-external',  (_, url) => shell.openExternal(url));
 ipcMain.handle('quit',           () => app.quit());
+ipcMain.handle('fetch-market-quotes', async () => {
+  const FINNHUB = process.env.FINNHUB_KEY || 'd95c889r01qihq3l33k0d95c889r01qihq3l33kg';
+  const SYMS = ['SPY','QQQ','DXY','GLD'];
+  try {
+    const results = await Promise.all(SYMS.map(async (sym) => {
+      const r = await fetch(`https://finnhub.io/api/v1/quote?symbol=${sym}&token=${FINNHUB}`);
+      if (!r.ok) return null;
+      const d = await r.json();
+      return d.c ? { sym, c: d.c, d: d.d, dp: d.dp } : null;
+    }));
+    return results.filter(Boolean);
+  } catch(e) { return []; }
+});
 ipcMain.handle('fetch-prices',   async () => {
   try {
     const settings = getSettings();
