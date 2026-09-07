@@ -261,7 +261,6 @@ function buildTicker() {
   var items = makeCryptoItems() + makeMktItems();
   tape.innerHTML = items + items;
   tape.style.animationDuration = speed + 's';
-  console.log('Ticker speed: ' + speed + 's');
   tape.querySelectorAll('.crypto-item').forEach(function(el) {
     el.addEventListener('click', function() {
       if (window.api) window.api.openCryptikr(el.getAttribute('data-id'));
