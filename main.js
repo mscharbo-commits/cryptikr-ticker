@@ -156,11 +156,16 @@ ipcMain.handle('fetch-market-quotes', async () => {
 ipcMain.handle('fetch-prices', async () => {
   try {
     const settings = getSettings();
-    const ids = (settings.coins || []).join(',');
-    const url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=' + ids + '&order=market_cap_desc&per_page=50&page=1&price_change_percentage=24h';
-    const r = await fetch(url, { headers: { 'x-cg-demo-api-key': CG_KEY } });
-    if (!r.ok) {  return []; }
-    const data = await r.json();
-    return data;
-  } catch(e) {  return []; }
+    const coins = settings.coins || [];
+    const batchSize = 8;
+    let allData = [];
+    for (let i = 0; i < coins.length; i += batchSize) {
+      const batch = coins.slice(i, i + batchSize);
+      const url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=' + batch.join(',') + '&order=market_cap_desc&per_page=20&page=1&price_change_percentage=24h';
+      const r = await fetch(url, { headers: { 'x-cg-demo-api-key': CG_KEY } });
+      if (r.ok) allData = allData.concat(await r.json());
+      if (i + batchSize < coins.length) await new Promise(res => setTimeout(res, 600));
+    }
+    return allData;
+  } catch(e) { return []; }
 });
