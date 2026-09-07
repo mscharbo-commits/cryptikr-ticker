@@ -161,7 +161,6 @@ ipcMain.handle('fetch-prices', async () => {
     const r = await fetch(url, { headers: { 'x-cg-demo-api-key': CG_KEY } });
     if (!r.ok) {  return []; }
     const data = await r.json();
-    console.log('Got coins:', data.map(function(c){return c.symbol;}).join(','));
     return data;
   } catch(e) {  return []; }
 });
