@@ -251,7 +251,7 @@ function buildTicker() {
   function makeCryptoItems() {
     return settingsCoins.map(function(id) {
       var c = priceMap[id];
-      var sym = COIN_SYMS[id] || (c ? (c.symbol||id).toUpperCase() : id.split('-')[0].toUpperCase().slice(0,6));
+      var sym = c ? (c.symbol||id).toUpperCase() : (COIN_SYMS[id] || id.split('-')[0].toUpperCase().slice(0,6));
       var price = c ? fmtPrice(c.current_price) : '--';
       var pct = c ? (c.price_change_percentage_24h||0).toFixed(2) : null;
       var up = pct ? parseFloat(pct) >= 0 : true;
