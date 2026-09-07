@@ -17,8 +17,21 @@ try {
   });
 } catch(e) { store = null; }
 
-function getSettings()       { return store ? store.store : { coins: ['bitcoin','ethereum','solana','ripple','dogecoin'], speed: 50 }; }
-function saveSettings(s)     { if (store) Object.assign(store.store, s); return getSettings(); }
+function getSettings() {
+  if (store) {
+    const s = { coins: store.get('coins'), speed: store.get('speed') };
+    console.log('Get settings:', JSON.stringify(s));
+    return s;
+  }
+  return { coins: ['bitcoin','ethereum','solana','ripple','dogecoin'], speed: 50 };
+}
+function saveSettings(s) {
+  if (store) {
+    Object.keys(s).forEach(function(key) { store.set(key, s[key]); });
+    console.log('Saved settings:', JSON.stringify(s));
+  }
+  return getSettings();
+}
 function getStored(key)      { return store ? store.get(key) : null; }
 function setStored(key, val) { if (store) store.set(key, val); }
 
