@@ -150,13 +150,16 @@ ipcMain.handle('fetch-market-quotes', async () => {
     return results.filter(Boolean);
   } catch(e) { return []; }
 });
-ipcMain.handle('fetch-prices',   async () => {
+ipcMain.handle('fetch-prices', async () => {
   try {
     const settings = getSettings();
     const ids = (settings.coins || []).join(',');
-    const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&per_page=50&page=1&price_change_percentage=24h`;
+    console.log('Fetching coins from CoinGecko:', ids);
+    const url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=' + ids + '&order=market_cap_desc&per_page=50&page=1&price_change_percentage=24h';
     const r = await fetch(url, { headers: { 'x-cg-demo-api-key': CG_KEY } });
-    if (!r.ok) return [];
-    return await r.json();
-  } catch(e) { return []; }
+    if (!r.ok) { console.log('CoinGecko error:', r.status); return []; }
+    const data = await r.json();
+    console.log('Got coins:', data.map(function(c){return c.symbol;}).join(','));
+    return data;
+  } catch(e) { console.error('fetch-prices error:', e); return []; }
 });
