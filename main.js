@@ -120,6 +120,7 @@ ipcMain.handle('open-cryptikr',  (_, coinId) => {
 });
 ipcMain.handle('open-external',  (_, url) => shell.openExternal(url));
 ipcMain.handle('quit',           () => app.quit());
+ipcMain.handle('close-settings', () => { if (settingsWindow) settingsWindow.close(); });
 ipcMain.handle('fetch-market-quotes', async () => {
   const FINNHUB = process.env.FINNHUB_KEY || 'd95c889r01qihq3l33k0d95c889r01qihq3l33kg';
   const SYMS = ['SPY','QQQ','DXY','GLD'];
