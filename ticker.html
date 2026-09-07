@@ -261,6 +261,7 @@ function buildTicker() {
   var items = makeCryptoItems() + makeMktItems();
   tape.innerHTML = items + items;
   tape.style.animationDuration = speed + 's';
+  console.log('Ticker speed: ' + speed + 's');
   tape.querySelectorAll('.crypto-item').forEach(function(el) {
     el.addEventListener('click', function() {
       if (window.api) window.api.openCryptikr(el.getAttribute('data-id'));
@@ -302,10 +303,16 @@ function openSettings() {
   if (window.api) window.api.openSettings();
 }
 
+function speedToDuration(s) {
+  // s: 1-100, higher = faster. Maps to 120s (slow) → 10s (fast)
+  s = Math.max(1, Math.min(100, s || 50));
+  return Math.round(120 - (s / 100) * 110);
+}
+
 async function init() {
   var settings = {};
   try { settings = await window.api.getSettings(); } catch(e) {}
-  speed = settings.speed ? (120 - settings.speed + 20) : 60;
+  speed = speedToDuration(settings.speed);
   buildAdZone();
   setInterval(rotateAd, 6000);
   await loadPrices();
