@@ -13,113 +13,239 @@ html, body {
 }
 .bar {
   display: flex; align-items: center;
-  height: 44px; overflow: hidden;
+  height: 44px; width: 100%; overflow: hidden;
   border-bottom: 1px solid #1E2D45;
 }
+/* BRAND */
 .brand {
-  flex-shrink: 0;
-  display: flex; align-items: center; gap: 6px;
-  padding: 0 14px;
-  border-right: 1px solid #1E2D45;
-  height: 44px;
-  cursor: pointer;
+  flex-shrink: 0; display: flex; align-items: center; gap: 7px;
+  padding: 0 14px; height: 44px; border-right: 1px solid #1E2D45;
+  cursor: pointer; transition: background .15s;
 }
+.brand:hover { background: #111827; }
 .brand-icon {
-  width: 20px; height: 20px;
+  width: 22px; height: 22px;
   background: linear-gradient(135deg, #F59E0B, #EF4444);
-  border-radius: 5px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 11px; font-weight: 800; color: #000;
+  border-radius: 6px; display: flex; align-items: center;
+  justify-content: center; font-size: 12px; font-weight: 800; color: #000;
 }
 .brand-name {
-  font-size: 12px; font-weight: 800;
-  color: #fff; letter-spacing: -.3px;
-  font-family: 'Inter', sans-serif;
+  font-size: 13px; font-weight: 800; color: #fff;
+  letter-spacing: -.3px; font-family: 'Inter', -apple-system, sans-serif;
 }
 .brand-name span { color: #F59E0B; }
-.ticker-track { flex: 1; overflow: hidden; height: 44px; display: flex; align-items: center; }
-.ticker-scroll {
+/* SEARCH */
+.search-zone {
+  flex-shrink: 0; display: flex; align-items: center; gap: 4px;
+  padding: 0 8px; border-right: 1px solid #1E2D45; height: 44px;
+}
+.search-zone input {
+  width: 130px; height: 26px; background: #111827;
+  border: 1px solid #1E2D45; border-radius: 6px;
+  color: #F0F4FF; font-size: 12px; padding: 0 8px;
+  font-family: 'JetBrains Mono', monospace; outline: none;
+}
+.search-zone input:focus { border-color: #F59E0B; }
+.search-zone input::placeholder { color: #475569; }
+.search-btn {
+  height: 26px; padding: 0 8px; background: linear-gradient(135deg,#F59E0B,#EF4444);
+  border: none; border-radius: 6px; color: #000; font-size: 12px;
+  font-weight: 700; cursor: pointer;
+}
+/* EDIT */
+.edit-btn {
+  flex-shrink: 0; padding: 0 12px; height: 44px;
+  display: flex; align-items: center;
+  border-right: 1px solid #1E2D45; cursor: pointer;
+  font-size: 11px; font-weight: 700; color: #475569;
+  font-family: 'Inter', sans-serif; transition: color .15s;
+  text-transform: uppercase; letter-spacing: .04em;
+}
+.edit-btn:hover { color: #F59E0B; }
+/* TICKER */
+.ticker-viewport { flex: 1; overflow: hidden; height: 44px; display: flex; align-items: center; }
+.ticker-tape {
   display: flex; gap: 0;
   animation: scroll 60s linear infinite;
   white-space: nowrap; align-items: center;
 }
-.ticker-scroll:hover { animation-play-state: paused; }
+.ticker-tape:hover { animation-play-state: paused; }
 .ticker-item {
   display: flex; align-items: center; gap: 8px;
   padding: 0 16px; height: 44px;
   border-right: 1px solid #1A2236;
-  cursor: pointer; transition: background .15s;
-  flex-shrink: 0;
+  cursor: pointer; transition: background .15s; flex-shrink: 0;
 }
 .ticker-item:hover { background: #111827; }
 .ticker-sym { font-size: 12px; font-weight: 700; color: #E5E9F0; }
 .ticker-price { font-size: 12px; color: #94A3B8; }
 .ticker-chg { font-size: 11px; font-weight: 600; }
 .up { color: #10B981; } .dn { color: #EF4444; }
-.controls {
-  flex-shrink: 0; display: flex; align-items: center;
-  border-left: 1px solid #1A2236; height: 44px;
+/* AD ZONE */
+.ad-zone {
+  width: 280px; height: 100%; flex-shrink: 0;
+  border-left: 1px solid #1A2236;
+  position: relative; overflow: hidden;
+  background: #0D1424; cursor: pointer;
 }
-.ctrl-btn {
-  width: 40px; height: 44px;
-  background: transparent; border: none;
-  color: #475569; font-size: 13px;
-  cursor: pointer; transition: color .15s;
+.ad-slide {
+  position: absolute; inset: 0; display: flex; align-items: center;
+  gap: 10px; padding: 0 12px;
+  opacity: 0; transition: opacity .6s ease;
+}
+.ad-slide.active { opacity: 1; }
+.ad-slide:hover { background: rgba(255,255,255,.03); }
+/* EXIT */
+.exit-btn {
+  flex-shrink: 0; width: 36px; height: 44px;
   display: flex; align-items: center; justify-content: center;
+  border-left: 1px solid #1A2236; cursor: pointer;
+  font-size: 14px; color: #475569; transition: color .15s;
 }
-.ctrl-btn:hover { color: #F59E0B; }
+.exit-btn:hover { color: #EF4444; }
 .loading { color: #475569; font-size: 12px; padding: 0 20px; }
-@keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+@keyframes scroll { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
 </style>
 </head>
 <body>
 <div class="bar">
-  <div class="brand" id="brand-logo" title="Open Cryptikr">
+
+  <!-- BRAND -->
+  <div class="brand" id="brand-btn" title="Open Cryptikr">
     <div class="brand-icon">₿</div>
     <div class="brand-name">Crypti<span>kr</span></div>
   </div>
-  <div class="ticker-track">
-    <div class="ticker-scroll" id="ticker-scroll">
-      <div class="loading">Loading prices...</div>
+
+  <!-- SEARCH -->
+  <div class="search-zone">
+    <input id="search-input" type="text" placeholder="Search coin..." maxlength="20"
+      onkeydown="if(event.key==='Enter') doSearch()" />
+    <button class="search-btn" onclick="doSearch()">↗</button>
+  </div>
+
+  <!-- EDIT -->
+  <div class="edit-btn" id="edit-btn" onclick="openSettings()">✎ Edit</div>
+
+  <!-- TICKER TAPE -->
+  <div class="ticker-viewport">
+    <div class="ticker-tape" id="ticker-tape">
+      <div class="loading">Loading crypto prices...</div>
     </div>
   </div>
-  <div class="controls">
-    <button class="ctrl-btn" id="btn-settings" title="Settings">⚙</button>
-  </div>
+
+  <!-- AD ZONE -->
+  <div class="ad-zone" id="ad-zone"></div>
+
+  <!-- EXIT -->
+  <div class="exit-btn" id="exit-btn" title="Quit Cryptikr Ticker"
+    onclick="if(window.api)window.api.quit();else window.close();">✕</div>
+
 </div>
 
 <script>
-var settings = { coins: ['bitcoin','ethereum','solana','ripple','dogecoin'], speed: 50 };
+// ── AD POOLS — crypto-focused ──────────────────────────────────────────────
+var AD_POOLS = [
+  { abbr:'CB',  name:'Coinbase',  color:'#0052FF', bg:'rgba(0,82,255,.08)',
+    hl:'The most trusted crypto exchange', sub:'Buy BTC, ETH, SOL & 200+ coins',
+    url:'https://coinbase.com' },
+  { abbr:'KRK', name:'Kraken',    color:'#5741D9', bg:'rgba(87,65,217,.08)',
+    hl:'Trade crypto with confidence', sub:'Low fees · Regulated · 200+ assets',
+    url:'https://kraken.com' },
+  { abbr:'GEM', name:'Gemini',    color:'#00DCFA', bg:'rgba(0,220,250,.06)',
+    hl:'Crypto you can trust', sub:'SOC 2 certified · Cold storage',
+    url:'https://gemini.com' },
+  { abbr:'BNC', name:'Binance',   color:'#F0B90B', bg:'rgba(240,185,11,.08)',
+    hl:'World\'s largest crypto exchange', sub:'$0 spot trading fees on BTC pairs',
+    url:'https://binance.com' },
+  { abbr:'LDG', name:'Ledger',    color:'#9161F5', bg:'rgba(145,97,245,.08)',
+    hl:'Secure your crypto offline', sub:'Hardware wallet trusted by 6M+ users',
+    url:'https://ledger.com' },
+  { abbr:'CKR', name:'Cryptikr',  color:'#F59E0B', bg:'rgba(245,158,11,.08)',
+    hl:'AI-powered crypto analysis', sub:'Deep dives · Live prices · Free forever',
+    url:'https://cryptikr.vercel.app' },
+];
+
+var adIndex = 0;
+var ads = AD_POOLS;
+
+function buildAdZone() {
+  var zone = document.getElementById('ad-zone');
+  if (!zone) return;
+  zone.innerHTML = '';
+  ads.forEach(function(ad, i) {
+    var div = document.createElement('div');
+    div.className = 'ad-slide' + (i === 0 ? ' active' : '');
+    div.style.cssText = 'background:' + (ad.bg || 'transparent') + ';pointer-events:' + (i===0?'auto':'none') + ';';
+    div.dataset.url = ad.url;
+
+    var logo = document.createElement('div');
+    logo.style.cssText = 'width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;background:' + ad.color + ';flex-shrink:0;font-size:10px;font-weight:900;color:#fff;letter-spacing:-.3px;';
+    logo.textContent = ad.abbr;
+
+    var body = document.createElement('div');
+    body.style.cssText = 'flex:1;display:flex;flex-direction:column;justify-content:center;gap:1px;min-width:0;';
+    body.innerHTML =
+      '<span style="font-size:9px;font-weight:700;color:' + ad.color + ';text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;">' + ad.name + '</span>' +
+      '<span style="font-size:12px;font-weight:700;color:#F0F4FF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.25;">' + ad.hl + '</span>' +
+      '<span style="font-size:10px;color:#64748B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.25;">' + ad.sub + '</span>';
+
+    div.appendChild(logo);
+    div.appendChild(body);
+    div.addEventListener('click', handleAdClick);
+    zone.appendChild(div);
+  });
+}
+
+function rotateAd() {
+  var slides = document.querySelectorAll('.ad-slide');
+  if (!slides.length) return;
+  slides[adIndex].classList.remove('active');
+  slides[adIndex].style.pointerEvents = 'none';
+  adIndex = (adIndex + 1) % ads.length;
+  slides[adIndex].classList.add('active');
+  slides[adIndex].style.pointerEvents = 'auto';
+}
+
+function handleAdClick() {
+  var active = document.querySelector('.ad-slide.active');
+  if (!active) return;
+  var url = active.dataset.url;
+  if (!url) return;
+  if (window.api && window.api.openExternal) window.api.openExternal(url);
+  else window.open(url, '_blank');
+}
+
+// ── TICKER ─────────────────────────────────────────────────────────────────
 var prices = [];
+var speed = 60;
 
 function fmtPrice(p) {
+  if (!p) return '--';
   if (p >= 10000) return '$' + Math.round(p).toLocaleString();
   if (p >= 1)     return '$' + p.toFixed(2);
   return '$' + p.toFixed(4);
 }
 
 function buildTicker() {
-  var scroll = document.getElementById('ticker-scroll');
-  if (!prices.length) { scroll.innerHTML = '<div class="loading">No data</div>'; return; }
+  var tape = document.getElementById('ticker-tape');
+  if (!prices.length) { tape.innerHTML = '<div class="loading">No data</div>'; return; }
   function makeItems() {
     return prices.map(function(c) {
       var up = (c.price_change_percentage_24h || 0) >= 0;
       var pct = (c.price_change_percentage_24h || 0).toFixed(2);
       return '<div class="ticker-item" data-id="' + c.id + '">'
         + '<span class="ticker-sym">' + (c.symbol||'').toUpperCase() + '</span>'
-        + '<span class="ticker-price">' + fmtPrice(c.current_price||0) + '</span>'
+        + '<span class="ticker-price">' + fmtPrice(c.current_price) + '</span>'
         + '<span class="ticker-chg ' + (up?'up':'dn') + '">' + (up?'+':'') + pct + '%</span>'
         + '</div>';
     }).join('');
   }
   var html = makeItems() + makeItems();
-  scroll.innerHTML = html;
-  var dur = Math.max(10, 120 - settings.speed + 20);
-  scroll.style.animationDuration = dur + 's';
-
-  scroll.querySelectorAll('.ticker-item').forEach(function(el) {
+  tape.innerHTML = html;
+  tape.style.animationDuration = speed + 's';
+  tape.querySelectorAll('.ticker-item').forEach(function(el) {
     el.addEventListener('click', function() {
-      window.api.openCryptikr(el.getAttribute('data-id'));
+      if (window.api) window.api.openCryptikr(el.getAttribute('data-id'));
     });
   });
 }
@@ -127,26 +253,43 @@ function buildTicker() {
 async function loadPrices() {
   try {
     var data = await window.api.fetchPrices();
-    if (data && data.length) {
-      prices = data;
-      buildTicker();
-    }
-  } catch(e) { console.error('Price fetch error:', e); }
+    if (data && data.length) { prices = data; buildTicker(); }
+  } catch(e) {}
+}
+
+function doSearch() {
+  var val = (document.getElementById('search-input').value || '').trim().toUpperCase();
+  if (!val) return;
+  var COIN_MAP = {
+    BTC:'bitcoin',ETH:'ethereum',SOL:'solana',XRP:'ripple',DOGE:'dogecoin',
+    ADA:'cardano',AVAX:'avalanche-2',DOT:'polkadot',LINK:'chainlink',
+    NEAR:'near',APT:'aptos',ARB:'arbitrum',ATOM:'cosmos',UNI:'uniswap',
+    SHIB:'shiba-inu',TON:'the-open-network',SUI:'sui',PEPE:'pepe',
+  };
+  var id = COIN_MAP[val] || val.toLowerCase();
+  if (window.api) window.api.openCryptikr(id);
+  document.getElementById('search-input').value = '';
+}
+
+function openSettings() {
+  if (window.api) window.api.openSettings();
 }
 
 async function init() {
-  try {
-    settings = await window.api.getSettings();
-  } catch(e) {}
+  var settings = {};
+  try { settings = await window.api.getSettings(); } catch(e) {}
+  speed = settings.speed ? (120 - settings.speed + 20) : 60;
+  buildAdZone();
+  setInterval(rotateAd, 6000);
   await loadPrices();
   setInterval(loadPrices, 60000);
 }
 
-document.getElementById('brand-logo').addEventListener('click', function() {
-  window.api.openCryptikr('');
+document.getElementById('brand-btn').addEventListener('click', function() {
+  if (window.api) window.api.openCryptikr('');
 });
-document.getElementById('btn-settings').addEventListener('click', function() {
-  window.api.openSettings();
+document.getElementById('exit-btn').addEventListener('click', function() {
+  if (window.api) window.api.quit(); else window.close();
 });
 
 init();
