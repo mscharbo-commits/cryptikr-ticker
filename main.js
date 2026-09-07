@@ -6,34 +6,38 @@ app.setName('Cryptikr Ticker');
 const TICKER_HEIGHT = 44;
 const CG_KEY = 'CG-pwDvU5d2bQqDKVha9KGCkaCf';
 
-let Store, store;
-try {
-  Store = require('electron-store');
-  store = new Store({
-    defaults: {
-      coins: ['bitcoin','ethereum','solana','ripple','dogecoin','cardano','avalanche-2','chainlink','near','arbitrum'],
-      speed: 50,
-    }
-  });
-} catch(e) { store = null; }
+const fs = require('fs');
+const SETTINGS_FILE = path.join(app.getPath('userData'), 'cryptikr-settings.json');
+const DEFAULTS = {
+  coins: ['bitcoin','ethereum','solana','ripple','dogecoin','cardano','avalanche-2','chainlink','near','arbitrum'],
+  speed: 50,
+};
 
 function getSettings() {
-  if (store) {
-    const s = { coins: store.get('coins'), speed: store.get('speed') };
-    console.log('Get settings:', JSON.stringify(s));
-    return s;
-  }
-  return { coins: ['bitcoin','ethereum','solana','ripple','dogecoin'], speed: 50 };
+  try {
+    if (fs.existsSync(SETTINGS_FILE)) {
+      const raw = fs.readFileSync(SETTINGS_FILE, 'utf8');
+      const s = JSON.parse(raw);
+      console.log('Get settings:', JSON.stringify(s));
+      return Object.assign({}, DEFAULTS, s);
+    }
+  } catch(e) { console.error('getSettings error:', e.message); }
+  return Object.assign({}, DEFAULTS);
 }
+
 function saveSettings(s) {
-  if (store) {
-    Object.keys(s).forEach(function(key) { store.set(key, s[key]); });
-    console.log('Saved settings:', JSON.stringify(s));
-  }
-  return getSettings();
+  try {
+    const current = getSettings();
+    const merged = Object.assign({}, current, s);
+    fs.writeFileSync(SETTINGS_FILE, JSON.stringify(merged, null, 2), 'utf8');
+    console.log('Saved settings to:', SETTINGS_FILE);
+    console.log('Saved:', JSON.stringify(merged));
+    return merged;
+  } catch(e) { console.error('saveSettings error:', e.message); return getSettings(); }
 }
-function getStored(key)      { return store ? store.get(key) : null; }
-function setStored(key, val) { if (store) store.set(key, val); }
+
+function getStored(key)      { return getSettings()[key]; }
+function setStored(key, val) { const s = {}; s[key] = val; saveSettings(s); }
 
 let tickerWindow = null;
 let settingsWindow = null;
