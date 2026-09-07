@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<title>Cryptikr Ticker Settings</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: #0A0E1A; color: #F0F4FF;
+  padding: 24px; min-height: 560px;
+  -webkit-font-smoothing: antialiased;
+}
+h1 { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+h1 span { color: #F59E0B; }
+.subtitle { font-size: 12px; color: #475569; margin-bottom: 24px; }
+.section { margin-bottom: 24px; }
+.section-title {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .08em; color: #475569;
+  margin-bottom: 12px; padding-bottom: 8px;
+  border-bottom: 1px solid #1E2D45;
+}
+.coins-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.coin-chip {
+  display: flex; align-items: center; gap: 6px;
+  background: #111827; border: 1px solid #1E2D45;
+  border-radius: 8px; padding: 6px 10px;
+  font-size: 13px; font-weight: 600; color: #94A3B8;
+}
+.coin-chip .sym { color: #F0F4FF; font-family: 'JetBrains Mono', monospace; }
+.coin-chip .rm {
+  color: #475569; font-size: 11px; cursor: pointer;
+  padding: 0 2px; border-radius: 3px; transition: color .15s;
+}
+.coin-chip .rm:hover { color: #EF4444; }
+.add-row { display: flex; gap: 8px; }
+.add-row input {
+  flex: 1; background: #111827; border: 1px solid #1E2D45;
+  border-radius: 8px; color: #F0F4FF; font-size: 13px;
+  padding: 8px 12px; outline: none; font-family: 'JetBrains Mono', monospace;
+}
+.add-row input:focus { border-color: #F59E0B; }
+.add-row input::placeholder { color: #475569; }
+.add-row button {
+  background: linear-gradient(135deg, #F59E0B, #EF4444);
+  color: #000; border: none; border-radius: 8px;
+  padding: 8px 16px; font-size: 13px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+}
+.speed-row { display: flex; align-items: center; gap: 12px; }
+.speed-row label { font-size: 12px; color: #475569; width: 40px; }
+.speed-row input[type=range] { flex: 1; accent-color: #F59E0B; }
+.popular { display: flex; flex-wrap: wrap; gap: 6px; }
+.popular-btn {
+  background: #111827; border: 1px solid #1E2D45;
+  border-radius: 6px; padding: 4px 10px;
+  font-size: 12px; font-weight: 600; color: #94A3B8;
+  cursor: pointer; font-family: 'JetBrains Mono', monospace;
+  transition: all .15s;
+}
+.popular-btn:hover { border-color: #F59E0B; color: #F59E0B; }
+.save-btn {
+  width: 100%; background: linear-gradient(135deg, #F59E0B, #EF4444);
+  color: #000; border: none; border-radius: 10px;
+  padding: 12px; font-size: 15px; font-weight: 700;
+  cursor: pointer; font-family: inherit; margin-top: 8px;
+  transition: opacity .2s;
+}
+.save-btn:hover { opacity: .9; }
+.saved { text-align: center; font-size: 12px; color: #10B981; margin-top: 8px; display: none; }
+</style>
+</head>
+<body>
+<h1>Crypti<span>kr</span> Ticker Settings</h1>
+<p class="subtitle">Customize your live crypto ticker bar</p>
+
+<div class="section">
+  <div class="section-title">Active Coins</div>
+  <div class="coins-grid" id="coins-grid"></div>
+  <div class="add-row">
+    <input type="text" id="add-input" placeholder="Add coin ID (e.g. chainlink, polkadot)" />
+    <button onclick="addCoin()">Add</button>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Popular Coins</div>
+  <div class="popular" id="popular-list"></div>
+</div>
+
+<div class="section">
+  <div class="section-title">Scroll Speed</div>
+  <div class="speed-row">
+    <label>Slow</label>
+    <input type="range" id="speed-range" min="10" max="100" value="50"/>
+    <label style="text-align:right">Fast</label>
+  </div>
+</div>
+
+<button class="save-btn" onclick="saveAll()">Save Settings</button>
+<div class="saved" id="saved-msg">✓ Saved!</div>
+
+<script>
+var POPULAR = [
+  {id:'bitcoin',sym:'BTC'},{id:'ethereum',sym:'ETH'},{id:'solana',sym:'SOL'},
+  {id:'ripple',sym:'XRP'},{id:'dogecoin',sym:'DOGE'},{id:'cardano',sym:'ADA'},
+  {id:'avalanche-2',sym:'AVAX'},{id:'polkadot',sym:'DOT'},{id:'chainlink',sym:'LINK'},
+  {id:'near',sym:'NEAR'},{id:'aptos',sym:'APT'},{id:'arbitrum',sym:'ARB'},
+  {id:'cosmos',sym:'ATOM'},{id:'uniswap',sym:'UNI'},{id:'shiba-inu',sym:'SHIB'},
+  {id:'the-open-network',sym:'TON'},{id:'sui',sym:'SUI'},{id:'pepe',sym:'PEPE'},
+];
+
+var SYM_TO_ID = {};
+POPULAR.forEach(function(c) { SYM_TO_ID[c.sym.toLowerCase()] = c.id; SYM_TO_ID[c.id] = c.id; });
+
+var coins = [];
+var speed = 50;
+
+function renderCoins() {
+  var grid = document.getElementById('coins-grid');
+  grid.innerHTML = coins.map(function(id) {
+    var p = POPULAR.find(function(x){return x.id===id;});
+    var label = p ? p.sym : id.replace(/-\d+$/,'').toUpperCase().slice(0,6);
+    return '<div class="coin-chip">'
+      + '<span class="sym">' + label + '</span>'
+      + '<span class="rm" data-id="' + id + '">✕</span>'
+      + '</div>';
+  }).join('');
+  grid.querySelectorAll('.rm').forEach(function(el) {
+    el.addEventListener('click', function() {
+      var id = el.getAttribute('data-id');
+      coins = coins.filter(function(c){return c!==id;});
+      renderCoins();
+    });
+  });
+}
+
+function renderPopular() {
+  var list = document.getElementById('popular-list');
+  list.innerHTML = POPULAR.map(function(p) {
+    return '<button class="popular-btn" data-id="' + p.id + '">' + p.sym + '</button>';
+  }).join('');
+  list.querySelectorAll('.popular-btn').forEach(function(el) {
+    el.addEventListener('click', function() {
+      var id = el.getAttribute('data-id');
+      if (coins.indexOf(id) < 0) { coins.push(id); renderCoins(); }
+    });
+  });
+}
+
+function addCoin() {
+  var input = document.getElementById('add-input');
+  var val = input.value.trim().toLowerCase().replace(/\s+/g,'-');
+  if (!val) return;
+  var id = SYM_TO_ID[val] || val;
+  if (coins.indexOf(id) < 0) { coins.push(id); renderCoins(); }
+  input.value = '';
+}
+
+document.getElementById('add-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') addCoin();
+});
+
+async function saveAll() {
+  speed = parseInt(document.getElementById('speed-range').value);
+  await window.api.saveSettings({ coins: coins, speed: speed });
+  var msg = document.getElementById('saved-msg');
+  msg.style.display = 'block';
+  setTimeout(function() { msg.style.display = 'none'; }, 2000);
+}
+
+async function init() {
+  try {
+    var s = await window.api.getSettings();
+    coins = s.coins || ['bitcoin','ethereum','solana'];
+    speed = s.speed || 50;
+    document.getElementById('speed-range').value = speed;
+  } catch(e) {
+    coins = ['bitcoin','ethereum','solana','ripple','dogecoin'];
+  }
+  renderCoins();
+  renderPopular();
+}
+
+init();
+</script>
+</body>
+</html>
