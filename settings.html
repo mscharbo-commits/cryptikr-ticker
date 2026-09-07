@@ -179,6 +179,8 @@ async function init() {
     coins = s.coins || ['bitcoin','ethereum','solana'];
     speed = s.speed || 50;
     document.getElementById('speed-range').value = speed;
+    var sv = document.getElementById('speed-val');
+    if (sv) sv.textContent = speed;
   } catch(e) {
     coins = ['bitcoin','ethereum','solana','ripple','dogecoin'];
   }
