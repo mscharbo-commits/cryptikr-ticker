@@ -18,10 +18,10 @@ function getSettings() {
     if (fs.existsSync(SETTINGS_FILE)) {
       const raw = fs.readFileSync(SETTINGS_FILE, 'utf8');
       const s = JSON.parse(raw);
-      console.log('Get settings:', JSON.stringify(s));
+      
       return Object.assign({}, DEFAULTS, s);
     }
-  } catch(e) { console.error('getSettings error:', e.message); }
+  } catch(e) {  }
   return Object.assign({}, DEFAULTS);
 }
 
@@ -30,9 +30,9 @@ function saveSettings(s) {
     const current = getSettings();
     const merged = Object.assign({}, current, s);
     fs.writeFileSync(SETTINGS_FILE, JSON.stringify(merged, null, 2), 'utf8');
-    console.log('Saved:', JSON.stringify(merged));
+    
     return merged;
-  } catch(e) { console.error('saveSettings error:', e.message); return getSettings(); }
+  } catch(e) {  return getSettings(); }
 }
 
 function getStored(key)      { return getSettings()[key]; }
@@ -159,9 +159,9 @@ ipcMain.handle('fetch-prices', async () => {
     const ids = (settings.coins || []).join(',');
     const url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=' + ids + '&order=market_cap_desc&per_page=50&page=1&price_change_percentage=24h';
     const r = await fetch(url, { headers: { 'x-cg-demo-api-key': CG_KEY } });
-    if (!r.ok) { console.log('CoinGecko error:', r.status); return []; }
+    if (!r.ok) {  return []; }
     const data = await r.json();
     console.log('Got coins:', data.map(function(c){return c.symbol;}).join(','));
     return data;
-  } catch(e) { console.error('fetch-prices error:', e); return []; }
+  } catch(e) {  return []; }
 });
