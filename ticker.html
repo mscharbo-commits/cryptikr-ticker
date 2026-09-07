@@ -293,13 +293,14 @@ function buildTicker() {
 
 async function loadPrices() {
   try {
+    var s = await window.api.getSettings();
+    settingsCoins = (s && s.coins) ? s.coins : settingsCoins;
     var data = await window.api.fetchPrices();
-    if (data && data.length) { prices = data; }
-    // Fetch market indexes
+    if (data && data.length) prices = data;
     var mData = await window.api.fetchMarketQuotes();
-    if (mData && mData.length) { marketQuotes = mData; }
-    buildTicker();
-  } catch(e) { console.error(e); }
+    if (mData && mData.length) marketQuotes = mData;
+  } catch(e) {}
+  buildTicker();
 }
 
 function doSearch() {
