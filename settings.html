@@ -168,8 +168,8 @@ async function saveAll() {
     await window.api.saveSettings({ coins: coins.slice(), speed: speed });
     var msg = document.getElementById('saved-msg');
     msg.style.display = 'block';
-    msg.textContent = '✓ Saved! Ticker updating...';
-    setTimeout(function() { msg.style.display = 'none'; }, 2500);
+    msg.textContent = '✓ Saved!';
+    setTimeout(function() { window.api.closeSettings(); }, 800);
   } catch(e) { alert('Save failed: ' + e.message); }
 }
 
