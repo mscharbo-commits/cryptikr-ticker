@@ -30,7 +30,6 @@ function saveSettings(s) {
     const current = getSettings();
     const merged = Object.assign({}, current, s);
     fs.writeFileSync(SETTINGS_FILE, JSON.stringify(merged, null, 2), 'utf8');
-    console.log('Saved settings to:', SETTINGS_FILE);
     console.log('Saved:', JSON.stringify(merged));
     return merged;
   } catch(e) { console.error('saveSettings error:', e.message); return getSettings(); }
@@ -158,7 +157,6 @@ ipcMain.handle('fetch-prices', async () => {
   try {
     const settings = getSettings();
     const ids = (settings.coins || []).join(',');
-    console.log('Fetching coins from CoinGecko:', ids);
     const url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=' + ids + '&order=market_cap_desc&per_page=50&page=1&price_change_percentage=24h';
     const r = await fetch(url, { headers: { 'x-cg-demo-api-key': CG_KEY } });
     if (!r.ok) { console.log('CoinGecko error:', r.status); return []; }
