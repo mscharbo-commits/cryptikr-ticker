@@ -122,7 +122,10 @@ app.on('window-all-closed', (e) => e.preventDefault());
 ipcMain.handle('get-settings',   () => getSettings());
 ipcMain.handle('save-settings',  (_, s) => {
   saveSettings(s);
-  if (tickerWindow) tickerWindow.webContents.reload();
+  // Give store time to write, then reload ticker
+  setTimeout(() => {
+    if (tickerWindow) tickerWindow.webContents.reload();
+  }, 300);
   return true;
 });
 ipcMain.handle('get-stored',     (_, k) => getStored(k));
