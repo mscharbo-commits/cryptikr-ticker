@@ -8,5 +8,6 @@ contextBridge.exposeInMainWorld('api', {
   openCryptikr:  (id)    => ipcRenderer.invoke('open-cryptikr', id),
   openExternal:  (url)   => ipcRenderer.invoke('open-external', url),
   fetchPrices:   ()      => ipcRenderer.invoke('fetch-prices'),
-  quit:          ()      => ipcRenderer.invoke('quit'),
+  quit:              ()      => ipcRenderer.invoke('quit'),
+  fetchMarketQuotes: ()      => ipcRenderer.invoke('fetch-market-quotes'),
 });
