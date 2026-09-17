@@ -70,6 +70,8 @@ html, body {
   display: flex; gap: 0;
   animation: scroll 60s linear infinite;
   white-space: nowrap; align-items: center;
+  will-change: transform;
+  contain: layout style;
 }
 .ticker-tape:hover { animation-play-state: paused; }
 .ticker-item {
@@ -108,7 +110,7 @@ html, body {
 }
 .exit-btn:hover { color: #fff; background: #EF4444; }
 .loading { color: #475569; font-size: 12px; padding: 0 20px; }
-@keyframes scroll { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+@keyframes scroll { 0%{transform:translate3d(0,0,0)} 100%{transform:translate3d(-50%,0,0)} }
 </style>
 </head>
 <body>
@@ -348,6 +350,12 @@ document.getElementById('exit-btn').addEventListener('click', function() {
 });
 
 init();
+
+// Pause ticker animation when window not visible — saves significant CPU
+document.addEventListener('visibilitychange', function() {
+  var tape = document.getElementById('ticker-tape');
+  if (tape) tape.style.animationPlayState = document.hidden ? 'paused' : 'running';
+});
 
 // Responsive scaling for larger monitors
 function scaleForScreen() {
