@@ -42,8 +42,9 @@ html, body {
 .search-zone input {
   width: 140px; height: 28px; background: #1A2236;
   border: 1px solid #2D3F5E; border-radius: 6px;
-  color: #F0F4FF; font-size: 12px; padding: 0 10px;
+  color: #FFFFFF; font-size: 12px; padding: 0 10px;
   font-family: 'JetBrains Mono', monospace; outline: none;
+  -webkit-text-fill-color: #FFFFFF;
 }
 .search-zone input:focus { border-color: #F59E0B; background: #1E2A42; }
 .search-zone input::placeholder { color: #64748B; }
@@ -333,6 +334,7 @@ async function init() {
   settingsCoins = (settings && settings.coins) ? settings.coins : [];
   speed = speedToDuration(settings.speed);
   buildAdZone();
+  scaleForScreen(); // re-run after ads are built so content scales too
   setInterval(rotateAd, 6000);
   await loadPrices();
   setInterval(loadPrices, 60000);
@@ -358,10 +360,28 @@ function scaleForScreen() {
     if (input)   input.style.width = '220px';
     if (adZone)  adZone.style.width = '400px';
     if (editBtn) editBtn.style.padding = '0 18px';
+    // Scale ad content
+    document.querySelectorAll('.ad-slide').forEach(function(s) {
+      var logo = s.querySelector('div:first-child');
+      var hl   = s.querySelector('span:nth-child(2)');
+      var sub  = s.querySelector('span:nth-child(3)');
+      if (logo) { logo.style.width='38px'; logo.style.height='38px'; logo.style.fontSize='12px'; }
+      if (hl)   hl.style.fontSize = '13px';
+      if (sub)  sub.style.fontSize = '11px';
+    });
   } else if (w >= 1920) { // 24" / 1080p / standard external monitors
     if (input)   input.style.width = '180px';
     if (adZone)  adZone.style.width = '340px';
     if (editBtn) editBtn.style.padding = '0 16px';
+    // Scale ad content
+    document.querySelectorAll('.ad-slide').forEach(function(s) {
+      var logo = s.querySelector('div:first-child');
+      var hl   = s.querySelector('span:nth-child(2)');
+      var sub  = s.querySelector('span:nth-child(3)');
+      if (logo) { logo.style.width='35px'; logo.style.height='35px'; logo.style.fontSize='11px'; }
+      if (hl)   hl.style.fontSize = '12.5px';
+      if (sub)  sub.style.fontSize = '10.5px';
+    });
   }
   // Under 1920 (laptop) — keep defaults
 }
