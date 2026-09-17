@@ -4,12 +4,15 @@ const fs = require('fs');
 
 app.setName('Cryptikr Ticker');
 
-// Disable GPU acceleration — ticker is simple UI, doesn't need it
-// Reduces GPU usage from ~15% to near zero
+// Kill GPU process entirely — ticker is pure text/CSS, no GPU needed
 app.disableHardwareAcceleration();
 app.commandLine.appendSwitch('disable-gpu');
-app.commandLine.appendSwitch('disable-software-rasterizer');
 app.commandLine.appendSwitch('disable-gpu-compositing');
+app.commandLine.appendSwitch('disable-gpu-rasterization');
+app.commandLine.appendSwitch('disable-gpu-sandbox');
+app.commandLine.appendSwitch('disable-software-rasterizer');
+app.commandLine.appendSwitch('in-process-gpu');
+app.commandLine.appendSwitch('no-sandbox');
 
 const TICKER_HEIGHT = 44;
 const CG_KEY = 'CG-pwDvU5d2bQqDKVha9KGCkaCf';
