@@ -68,12 +68,9 @@ html, body {
 .ticker-viewport { flex: 1; overflow: hidden; height: 44px; display: flex; align-items: center; }
 .ticker-tape {
   display: flex; gap: 0;
-  animation: scroll 60s linear infinite;
   white-space: nowrap; align-items: center;
   will-change: transform;
-  contain: layout style;
 }
-.ticker-tape:hover { animation-play-state: paused; }
 .ticker-item {
   display: flex; align-items: center; gap: 8px;
   padding: 0 16px; height: 44px;
@@ -110,7 +107,7 @@ html, body {
 }
 .exit-btn:hover { color: #fff; background: #EF4444; }
 .loading { color: #475569; font-size: 12px; padding: 0 20px; }
-@keyframes scroll { 0%{transform:translate3d(0,0,0)} 100%{transform:translate3d(-50%,0,0)} }
+
 </style>
 </head>
 <body>
@@ -287,6 +284,7 @@ function buildTicker() {
       if (window.api) window.api.openCryptikr(el.getAttribute('data-id'));
     });
   });
+  startScroll();
   tape.querySelectorAll('[data-url]').forEach(function(el) {
     el.addEventListener('click', function() {
       if (window.api) window.api.openExternal(el.getAttribute('data-url'));
@@ -335,6 +333,8 @@ async function init() {
   try { settings = await window.api.getSettings(); } catch(e) {}
   settingsCoins = (settings && settings.coins) ? settings.coins : [];
   speed = speedToDuration(settings.speed);
+  // Map duration to px/frame: faster duration = more px per frame
+  scrollSpeed = Math.max(0.2, Math.min(2.0, (120 - speed) / 50));
   buildAdZone();
   scaleForScreen(); // re-run after ads are built so content scales too
   setInterval(rotateAd, 6000);
@@ -351,11 +351,48 @@ document.getElementById('exit-btn').addEventListener('click', function() {
 
 init();
 
-// Pause ticker animation when window not visible — saves significant CPU
-document.addEventListener('visibilitychange', function() {
+// JS-driven scroll — much lighter than CSS animation
+var scrollX = 0;
+var scrollPaused = false;
+var scrollRAF = null;
+var scrollSpeed = 0.5; // px per frame — adjust for speed pref
+
+function getHalfWidth() {
   var tape = document.getElementById('ticker-tape');
-  if (tape) tape.style.animationPlayState = document.hidden ? 'paused' : 'running';
+  if (!tape) return 0;
+  return tape.scrollWidth / 2;
+}
+
+function scrollTick() {
+  if (!scrollPaused) {
+    var tape = document.getElementById('ticker-tape');
+    if (tape) {
+      scrollX += scrollSpeed;
+      var half = getHalfWidth();
+      if (half > 0 && scrollX >= half) scrollX = 0;
+      tape.style.transform = 'translate3d(-' + scrollX + 'px, 0, 0)';
+    }
+  }
+  scrollRAF = requestAnimationFrame(scrollTick);
+}
+
+function startScroll() {
+  if (scrollRAF) cancelAnimationFrame(scrollRAF);
+  scrollX = 0;
+  scrollRAF = requestAnimationFrame(scrollTick);
+}
+
+// Pause when window hidden
+document.addEventListener('visibilitychange', function() {
+  scrollPaused = document.hidden;
 });
+
+// Pause on hover
+var viewport = document.querySelector('.ticker-viewport');
+if (viewport) {
+  viewport.addEventListener('mouseenter', function() { scrollPaused = true; });
+  viewport.addEventListener('mouseleave', function() { scrollPaused = false; });
+}
 
 // Responsive scaling for larger monitors
 function scaleForScreen() {
