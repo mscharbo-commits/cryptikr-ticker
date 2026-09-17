@@ -346,6 +346,26 @@ document.getElementById('exit-btn').addEventListener('click', function() {
 });
 
 init();
+
+// Responsive scaling for larger monitors
+function scaleForScreen() {
+  var w = window.screen.width;
+  var input = document.querySelector('.search-zone input');
+  var adZone = document.querySelector('.ad-zone');
+  var editBtn = document.querySelector('.edit-btn');
+
+  if (w >= 2560) {        // 27"+ / 5K displays
+    if (input)   input.style.width = '220px';
+    if (adZone)  adZone.style.width = '400px';
+    if (editBtn) editBtn.style.padding = '0 18px';
+  } else if (w >= 1920) { // 24" / 1080p / standard external monitors
+    if (input)   input.style.width = '180px';
+    if (adZone)  adZone.style.width = '340px';
+    if (editBtn) editBtn.style.padding = '0 16px';
+  }
+  // Under 1920 (laptop) — keep defaults
+}
+scaleForScreen();
 </script>
 </body>
 </html>
