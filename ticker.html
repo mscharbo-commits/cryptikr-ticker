@@ -363,14 +363,20 @@ function getHalfWidth() {
   return tape.scrollWidth / 2;
 }
 
-function scrollTick() {
-  if (!scrollPaused) {
-    var tape = document.getElementById('ticker-tape');
-    if (tape) {
-      scrollX += scrollSpeed;
-      var half = getHalfWidth();
-      if (half > 0 && scrollX >= half) scrollX = 0;
-      tape.style.transform = 'translate3d(-' + scrollX + 'px, 0, 0)';
+var lastScrollTime = 0;
+var SCROLL_INTERVAL = 33; // ~30fps instead of 60fps — halves WindowServer load
+
+function scrollTick(timestamp) {
+  if (timestamp - lastScrollTime >= SCROLL_INTERVAL) {
+    lastScrollTime = timestamp;
+    if (!scrollPaused) {
+      var tape = document.getElementById('ticker-tape');
+      if (tape) {
+        scrollX += scrollSpeed;
+        var half = getHalfWidth();
+        if (half > 0 && scrollX >= half) scrollX = 0;
+        tape.style.transform = 'translate3d(-' + scrollX + 'px, 0, 0)';
+      }
     }
   }
   scrollRAF = requestAnimationFrame(scrollTick);
