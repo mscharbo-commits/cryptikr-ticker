@@ -333,8 +333,9 @@ async function init() {
   try { settings = await window.api.getSettings(); } catch(e) {}
   settingsCoins = (settings && settings.coins) ? settings.coins : [];
   speed = speedToDuration(settings.speed);
-  // Map duration to px/frame: faster duration = more px per frame
-  scrollSpeed = Math.max(0.2, Math.min(2.0, (120 - speed) / 50));
+  // settings.speed is 1-100, map directly to px/frame
+  var rawSpeed = settings.speed || 50;
+  scrollSpeed = Math.max(0.3, Math.min(3.0, rawSpeed / 30));
   buildAdZone();
   scaleForScreen(); // re-run after ads are built so content scales too
   setInterval(rotateAd, 6000);
