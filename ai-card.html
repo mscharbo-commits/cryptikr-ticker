@@ -143,11 +143,18 @@ function sendFollowUp() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-  if (window.pulseAPI && window.pulseAPI.getPendingQuestion) {
-    window.pulseAPI.getPendingQuestion().then(function(q) {
-      if (q) sendQuestion(q);
-    });
-  }
+  var body = document.getElementById('body');
+  if (!window.api) { body.innerHTML = 'ERROR: api not available'; return; }
+  if (!window.api.getPendingQuestion) { body.innerHTML = 'ERROR: getPendingQuestion missing'; return; }
+  window.api.getPendingQuestion().then(function(q) {
+    if (q) {
+      sendQuestion(q);
+    } else {
+      body.innerHTML = 'ERROR: no question received';
+    }
+  }).catch(function(e) {
+    body.innerHTML = 'ERROR: ' + e.message;
+  });
 });
 </script>
 </body>
