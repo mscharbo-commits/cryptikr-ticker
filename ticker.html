@@ -472,6 +472,8 @@ function handleSearchOrAI() {
 
 function askAI(question) {
   if (!window.api) return;
+  var input = document.getElementById('search-input');
+  if (input) input.value = '';
   window.api.expandForAI(question);
 }
 
