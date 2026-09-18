@@ -40,7 +40,7 @@ html, body {
   padding: 0 8px; border-right: 1px solid #1E2D45; height: 44px;
 }
 .search-zone input {
-  width: 140px; height: 28px; background: #1A2236;
+  width: 180px; height: 28px; background: #1A2236;
   border: 1px solid #2D3F5E; border-radius: 6px;
   color: #FFFFFF; font-size: 12px; padding: 0 10px;
   font-family: 'JetBrains Mono', monospace; outline: none;
@@ -121,9 +121,9 @@ html, body {
 
   <!-- SEARCH -->
   <div class="search-zone">
-    <input id="search-input" type="text" placeholder="Search coin..." maxlength="20"
-      onkeydown="if(event.key==='Enter') doSearch()" />
-    <button class="search-btn" onclick="doSearch()">↗</button>
+    <input id="search-input" type="text" placeholder="Search coin..." maxlength="60"
+      onkeydown="if(event.key==='Enter') handleSearchOrAI()" />
+    <button class="search-btn" onclick="handleSearchOrAI()" title="Search or Ask AI">⚡</button>
   </div>
 
   <!-- EDIT -->
@@ -438,6 +438,43 @@ function scaleForScreen() {
   // Under 1920 (laptop) — keep defaults
 }
 scaleForScreen();
+
+// ── CRYPTIKR AI ──────────────────────────────────────────────────────────────
+var CRYPTO_TICKERS = /^(BTC|ETH|SOL|BNB|XRP|ADA|AVAX|DOGE|DOT|MATIC|LINK|UNI|ATOM|LTC|BCH|XLM|ALGO|VET|GRAM|TON|NEAR|FTM|SAND|MANA|CRO|SHIB|TRX|ETC|XMR|DASH|ZEC|IOTA|NEO|EOS|WAVES|QTUM|ZIL|ICX|ONT|BAT|OMG|ZRX|AAVE|COMP|MKR|SNX|YFI|SUSHI|CRV|BAL|REN|KNC|REP|BAND|NMR|BNT|MLN|LRC|STORJ|SKL|GRT|OCEAN|FIL|AR|HNT|CHZ|ENJ|AXS|GALA|ILV|RUNE|LUNA|UST|CAKE|AUTO|BAKE|XVS|ALPACA|ALPHA|BELT)$/i;
+var PLACEHOLDERS = [
+  'Search coin... BTC, ETH',
+  'Ask CryptikrAI a question...',
+  'Search coin or ask AI...'
+];
+var phIdx = 0;
+
+function rotatePlaceholder() {
+  var input = document.getElementById('search-input');
+  if (input && document.activeElement !== input) {
+    phIdx = (phIdx + 1) % PLACEHOLDERS.length;
+    input.placeholder = PLACEHOLDERS[phIdx];
+  }
+}
+setInterval(rotatePlaceholder, 3000);
+
+function handleSearchOrAI() {
+  var val = (document.getElementById('search-input').value || '').trim();
+  if (!val) return;
+  var upper = val.toUpperCase();
+  // Pure crypto ticker (no spaces, known symbol or short) → price search
+  var isCrypto = CRYPTO_TICKERS.test(upper) || (/^[A-Z]{2,6}$/.test(upper) && val.length <= 6 && !val.includes(' '));
+  if (isCrypto) {
+    doSearch();
+  } else {
+    askAI(val);
+  }
+}
+
+function askAI(question) {
+  if (!window.api) return;
+  window.api.expandForAI(question);
+}
+
 </script>
 </body>
 </html>
