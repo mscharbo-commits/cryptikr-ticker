@@ -98,6 +98,49 @@ function buildTray() {
   tray.setContextMenu(menu);
 }
 
+
+// ── AI CARD WINDOW ────────────────────────────────────────────────────────────
+let aiWin = null;
+let pendingQuestion = '';
+
+ipcMain.handle('expand-for-ai', (event, q) => {
+  pendingQuestion = q || '';
+  if (aiWin && !aiWin.isDestroyed()) { aiWin.focus(); return; }
+  const tb = tickerWindow ? tickerWindow.getBounds() : {x:0, y:0};
+  aiWin = new BrowserWindow({
+    width:400, height:320,
+    x:tb.x, y:tb.y + 44,
+    frame:false, transparent:false,
+    backgroundColor:'#0D1117',
+    alwaysOnTop:true, resizable:false,
+    movable:false, minimizable:false,
+    maximizable:false, skipTaskbar:true,
+    hasShadow:false,
+    webPreferences:{
+      nodeIntegration:false, contextIsolation:true,
+      preload: path.join(__dirname,'preload.js'),
+      webSecurity:false
+    }
+  });
+  aiWin.loadFile('ai-card.html');
+  aiWin.setAlwaysOnTop(true,'screen-saver');
+  aiWin.on('closed', () => { aiWin = null; });
+});
+
+ipcMain.handle('collapse-from-ai', () => {
+  if (aiWin && !aiWin.isDestroyed()) { aiWin.destroy(); aiWin = null; }
+});
+
+ipcMain.handle('get-pending-question', () => {
+  const q = pendingQuestion;
+  pendingQuestion = '';
+  return q;
+});
+
+ipcMain.on('close-ai-card', () => {
+  if (aiWin && !aiWin.isDestroyed()) { aiWin.destroy(); aiWin = null; }
+});
+
 app.whenReady().then(() => { createTickerWindow(); buildTray(); });
 app.on('window-all-closed', (e) => e.preventDefault());
 
