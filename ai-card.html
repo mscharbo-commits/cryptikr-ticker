@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body {
+  width:400px; height:320px;
+  background:#0D1117; color:#F0F4FF;
+  font-family:'Inter',-apple-system,sans-serif;
+  overflow:hidden;
+  border:1px solid #1E2D45;
+  border-top:2px solid #F59E0B;
+  border-radius:0 0 12px 12px;
+}
+#header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 14px; border-bottom:1px solid #1E2D45;
+  background:linear-gradient(135deg,rgba(245,158,11,.08),rgba(99,102,241,.04));
+}
+#close-btn { background:none; border:none; color:#475569; font-size:18px; cursor:pointer; }
+#close-btn:hover { color:#F0F4FF; }
+.badge { font-size:9px; font-weight:700; padding:1px 5px; border-radius:8px;
+  background:rgba(245,158,11,.15); color:#F59E0B; }
+#body {
+  padding:12px 14px; font-size:12px; color:#94A3B8; line-height:1.7;
+  overflow-y:auto; height:218px;
+}
+#body.loaded { color:#F0F4FF; }
+#input-row {
+  display:flex; gap:6px; padding:8px 12px;
+  border-top:1px solid #1E2D45;
+  position:absolute; bottom:0; left:0; right:0;
+  background:#0D1117;
+}
+#followup {
+  flex:1; background:#1A2236; border:1px solid #1E2D45;
+  border-radius:7px; color:#F0F4FF; font-size:11px;
+  padding:5px 10px; outline:none; font-family:inherit;
+}
+#followup:focus { border-color:#F59E0B; }
+#followup::placeholder { color:#475569; }
+#send-btn {
+  background:linear-gradient(135deg,#F59E0B,#D97706);
+  color:#000; border:none; border-radius:7px;
+  padding:0 12px; font-size:14px; cursor:pointer; height:32px;
+  font-weight:700;
+}
+.typing { display:flex; gap:4px; align-items:center; padding:4px 0; }
+.typing span { width:6px; height:6px; background:#F59E0B; border-radius:50%;
+  animation:t .8s infinite; display:inline-block; }
+.typing span:nth-child(2){animation-delay:.15s;}
+.typing span:nth-child(3){animation-delay:.3s;}
+@keyframes t{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+</style>
+</head>
+<body>
+<div id="header">
+  <div style="display:flex;align-items:center;gap:8px;">
+    <span style="font-size:16px;">⚡</span>
+    <span style="font-size:13px;font-weight:700;">CryptikrAI</span>
+    <span class="badge">LIVE</span>
+  </div>
+  <button id="close-btn" onclick="closeCard()">✕</button>
+</div>
+<div id="body">
+  <div class="typing"><span></span><span></span><span></span></div>
+</div>
+<div id="input-row">
+  <input id="followup" placeholder="Follow up question..."
+    onkeydown="if(event.key==='Enter') sendFollowUp()"/>
+  <button id="send-btn" onclick="sendFollowUp()">⚡</button>
+</div>
+<script>
+var chatHistory = [];
+var busy = false;
+
+function closeCard() {
+  if (window.pulseAPI) window.pulseAPI.closeAICard();
+}
+
+function showTyping() {
+  var body = document.getElementById('body');
+  body.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
+  body.classList.remove('loaded');
+}
+
+function showResponse(text) {
+  var body = document.getElementById('body');
+  body.innerHTML = text.replace(/\n/g,'<br>');
+  body.classList.add('loaded');
+}
+
+function sendQuestion(q) {
+  if (busy || !q) return;
+  busy = true;
+  document.getElementById('followup').value = '';
+  document.getElementById('send-btn').disabled = true;
+  chatHistory.push({ role:'user', content:q });
+  showTyping();
+
+  // Check cache
+  var cacheKey = 'ai_' + q.toLowerCase().replace(/[^a-z0-9]/g,'_').substring(0,60);
+  try {
+    var cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+    if (cached && cached.ts && Date.now() - cached.ts < 30*60*1000) {
+      chatHistory.push({ role:'assistant', content:cached.text });
+      showResponse(cached.text);
+      busy = false;
+      document.getElementById('send-btn').disabled = false;
+      return;
+    }
+  } catch(e) {}
+
+  fetch('https://pulsestock-nu.vercel.app/api/chat', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      system: 'You are CryptikrAI, an expert crypto market analyst. Give concise, direct answers — 2-3 paragraphs max. No markdown headers. Focus on crypto markets, Bitcoin, altcoins, DeFi, macro impact on crypto. Today: ' + new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString('en-US',{timeZone:'America/New_York'}) + ' ET.',
+      messages: chatHistory.slice(-6)
+    })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    var reply = (data.content && data.content[0] && data.content[0].text) || 'Could not get a response.';
+    chatHistory.push({ role:'assistant', content:reply });
+    try { localStorage.setItem(cacheKey, JSON.stringify({text:reply,ts:Date.now()})); } catch(e){}
+    showResponse(reply);
+    busy = false;
+    document.getElementById('send-btn').disabled = false;
+    document.getElementById('followup').focus();
+  })
+  .catch(function(e){
+    showResponse('Connection error: ' + e.message);
+    busy = false;
+    document.getElementById('send-btn').disabled = false;
+  });
+}
+
+function sendFollowUp() {
+  var q = document.getElementById('followup').value.trim();
+  if (q) sendQuestion(q);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  if (window.pulseAPI && window.pulseAPI.getPendingQuestion) {
+    window.pulseAPI.getPendingQuestion().then(function(q) {
+      if (q) sendQuestion(q);
+    });
+  }
+});
+</script>
+</body>
+</html>
