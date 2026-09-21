@@ -137,6 +137,10 @@ ipcMain.handle('get-pending-question', () => {
   return q;
 });
 
+ipcMain.handle('open-external', (event, url) => {
+  shell.openExternal(url);
+});
+
 ipcMain.on('close-ai-card', () => {
   if (aiWin && !aiWin.isDestroyed()) { aiWin.destroy(); aiWin = null; }
 });
