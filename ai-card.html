@@ -87,7 +87,12 @@ function showTyping() {
 
 function showResponse(text) {
   var body = document.getElementById('body');
-  body.innerHTML = text.replace(/\n/g,'<br>');
+  var clean = text.replace(/\[Read More\]\([^)]+\)/g, '').replace(/\n/g,'<br>');
+  body.innerHTML = clean
+    + '<div style="margin-top:12px;padding-top:10px;border-top:1px solid #1E2D45;">'
+    + '<a href="https://pulsestock-nu.vercel.app" target="_blank" '
+    + 'style="color:#F59E0B;font-size:11px;font-weight:700;text-decoration:none;">'
+    + '⚡ See Full Analysis at PulseStock →</a></div>';
   body.classList.add('loaded');
 }
 
