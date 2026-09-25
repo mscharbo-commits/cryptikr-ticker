@@ -125,7 +125,13 @@ function sendQuestion(q) {
       messages: chatHistory.slice(-6)
     })
   })
-  .then(function(r){ return r.json(); })
+  .then(function(r){
+    if (!r.ok) throw new Error('API error ' + r.status);
+    return r.text().then(function(t){
+      try { return JSON.parse(t); }
+      catch(e) { throw new Error('Bad response: ' + t.substring(0,100)); }
+    });
+  })
   .then(function(data){
     var reply = (data.content && data.content[0] && data.content[0].text) || 'Could not get a response.';
     chatHistory.push({ role:'assistant', content:reply });
